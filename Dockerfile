@@ -10,10 +10,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags="-s -w" -o /out/appdata-suppressor .
 
+# Alpine only for busybox wget in the healthcheck. The app talks to the host
+# daemon through the mounted /var/run/docker.sock, no docker CLI needed.
 FROM alpine:3.20
-# The scanner shells out to the docker CLI, which talks to the host daemon
-# through the mounted /var/run/docker.sock.
-RUN apk add --no-cache docker-cli
 COPY --from=build /out/appdata-suppressor /usr/local/bin/appdata-suppressor
 
 EXPOSE 8765

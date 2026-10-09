@@ -36,6 +36,7 @@ func main() {
 	user := flag.String("user", envOr("APPDATA_USER", "admin"), "login user name (env APPDATA_USER)")
 	password := flag.String("password", "", "login password; prefer env APPDATA_PASSWORD, flags are visible in ps")
 	sessionTTL := flag.Duration("session-ttl", 7*24*time.Hour, "how long a login stays valid")
+	dockerHost := flag.String("docker-host", envOr("DOCKER_HOST", docker.DefaultHost), "Docker daemon address, unix:// or tcp:// (env DOCKER_HOST)")
 	trashDays := flag.Int("trash-days", 7, "days before trashed folders are permanently deleted (0 = never)")
 	noAuth := flag.Bool("no-auth", false, "disable authentication (only behind a reverse proxy that handles it)")
 	flag.Parse()
@@ -60,7 +61,11 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	sc := &scanner.Scanner{Root: *root, Aliases: aliases, Docker: docker.CLI{}}
+	dockerClient, err := docker.New(*dockerHost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	sc := &scanner.Scanner{Root: *root, Aliases: aliases, Docker: dockerClient}
 	job := scanner.NewJob(ctx, sc)
 	job.Start() // so the first page load already has results
 	srv := &http.Server{

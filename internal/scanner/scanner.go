@@ -14,7 +14,7 @@ import (
 	"appdata-suppressor/internal/docker"
 )
 
-// ContainerLister is implemented by docker.CLI; tests substitute a fake.
+// ContainerLister is implemented by docker.Client; tests substitute a fake.
 type ContainerLister interface {
 	Containers(ctx context.Context) ([]docker.Container, error)
 }

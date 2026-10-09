@@ -40,10 +40,13 @@ Then open http://server:8765 and log in as `admin` with the password you chose.
 | `-user`        | `admin`             | Login user name (or `APPDATA_USER` env var)                      |
 | `-password`    | —                   | Login password; prefer the `APPDATA_PASSWORD` env var            |
 | `-session-ttl` | `168h`              | How long a login stays valid                                     |
+| `-docker-host` | `unix:///var/run/docker.sock` | Docker daemon, `unix://` or `tcp://` (or `DOCKER_HOST` env var) |
 | `-trash-days`  | `7`                 | Days before trashed folders are permanently deleted (`0` = never) |
 | `-no-auth`     | `false`             | Disable authentication                                           |
 
-The binary needs the `docker` command and permission to delete inside `-path`.
+The binary needs access to the Docker socket and permission to delete inside
+`-path`. It talks to the Docker Engine API directly; the `docker` CLI is not needed.
+TLS-protected TCP daemons and Windows named pipes are not supported.
 
 ## Trash
 
@@ -113,7 +116,7 @@ it when a reverse proxy already handles authentication).
 ```
 main.go                  flags, server startup and graceful shutdown
 internal/auth            login, sessions, brute-force protection
-internal/docker          lists containers and their bind mounts (docker CLI)
+internal/docker          lists containers and their bind mounts (Engine API)
 internal/scanner         folder scan, background scan job, sizes, trash
 internal/server          HTTP API (/api/scan, /api/delete, /api/trash/...)
 web/static               user interface (HTML/CSS/JS)
