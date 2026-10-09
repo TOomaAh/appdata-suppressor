@@ -1,0 +1,7 @@
+.git
+.zed
+*.exe
+appdata-suppressor
+Dockerfile
+compose.yaml
+README.md

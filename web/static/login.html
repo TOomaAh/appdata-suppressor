@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion · Appdata Cleaner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+<form class="login-card" id="loginForm">
+  <div class="logo"><div class="icon">🐳</div>Appdata Cleaner</div>
+
+  <label for="user">Utilisateur</label>
+  <input id="user" name="user" autocomplete="username" required autofocus>
+
+  <label for="password">Mot de passe</label>
+  <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+  <div id="loginError" class="login-error" hidden></div>
+
+  <button class="btn btn-primary" id="loginBtn" type="submit">Se connecter</button>
+</form>
+
+<script src="login.js"></script>
+</body>
+</html>

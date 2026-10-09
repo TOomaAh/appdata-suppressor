@@ -1,0 +1,15 @@
+services:
+  appdata-suppressor:
+    build: .
+    container_name: appdata-suppressor
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      APPDATA_PASSWORD: change-me
+    # Docker reports mount sources as host paths, so the appdata folder must be
+    # mounted at the same path inside the container for the matching to work.
+    command: ["-path", "/mnt/cache/appdata", "-alias", "/mnt/user/appdata"]
+    volumes:
+      - /mnt/cache/appdata:/mnt/cache/appdata
+      - /var/run/docker.sock:/var/run/docker.sock
