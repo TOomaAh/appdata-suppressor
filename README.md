@@ -7,8 +7,6 @@ move them to a trash, restore them, or delete them permanently.
 A folder counts as **used** when at least one container (running or stopped) has a
 bind mount on that folder or on one of its subfolders.
 
-The web interface is in French.
-
 Scans run in the background: one starts when the server boots, and the latest
 result is cached, so the page loads instantly. The folder list and container
 usage show up right away; sizes, the slow part on a large appdata, fill in as
@@ -51,7 +49,7 @@ TLS-protected TCP daemons and Windows named pipes are not supported.
 ## Trash
 
 Deleting a folder moves it to `<path>/.appdata-trash/`. It stays on the same
-filesystem, so the move is instant and frees no space yet. From the **Corbeille**
+filesystem, so the move is instant and frees no space yet. From the **Trash**
 view you can restore a folder to its original name or delete it permanently.
 
 Trashed folders are permanently deleted after `-trash-days` days (checked at

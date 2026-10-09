@@ -5,8 +5,8 @@ const errorBox = document.getElementById('loginError');
 const button = document.getElementById('loginBtn');
 
 const messages = {
-  401: 'Identifiants incorrects.',
-  429: 'Trop de tentatives échouées, réessayez dans une minute.',
+  401: 'Invalid user name or password.',
+  429: 'Too many failed attempts, try again in a minute.',
 };
 
 // Already logged in, or authentication disabled: go straight to the app.
@@ -27,9 +27,9 @@ form.addEventListener('submit', async (e) => {
       return;
     }
     const body = await res.json().catch(() => ({}));
-    errorBox.textContent = messages[res.status] || body.error || 'Erreur ' + res.status;
+    errorBox.textContent = messages[res.status] || body.error || 'Error ' + res.status;
   } catch (err) {
-    errorBox.textContent = 'Serveur injoignable : ' + err.message;
+    errorBox.textContent = 'Server unreachable: ' + err.message;
   }
   errorBox.hidden = false;
   button.disabled = false;

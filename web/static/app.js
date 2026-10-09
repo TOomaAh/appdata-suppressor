@@ -23,14 +23,19 @@ function esc(s) {
 }
 
 function formatBytes(n) {
-  const units = ['o', 'Ko', 'Mo', 'Go', 'To'];
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0;
   while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
   return (i === 0 ? n : n.toFixed(n < 10 ? 1 : 0)) + ' ' + units[i];
 }
 
-const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' });
 const ZERO_TIME = '0001-01-01T00:00:00Z';
+
+// count(3, 'folder') === '3 folders'
+function count(n, noun) {
+  return n + ' ' + noun + (n === 1 ? '' : 's');
+}
 
 function formatDate(iso) {
   return iso && iso !== ZERO_TIME ? dateFormat.format(new Date(iso)) : '—';
@@ -40,7 +45,7 @@ async function api(url, options) {
   const res = await fetch(url, options);
   if (res.status === 401) {
     location.replace('/login.html');
-    throw new Error('Session expirée');
+    throw new Error('Session expired');
   }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.error || res.status + ' ' + res.statusText);
@@ -74,14 +79,14 @@ async function runBatch(url, body, doneMsg, label = (n) => n) {
     const failed = results.filter((r) => r.error);
     const ok = results.length - failed.length;
     if (failed.length) {
-      toast(ok + ' ' + doneMsg + ', ' + failed.length + ' échec(s) :\n'
-        + failed.map((r) => '• ' + label(r.name) + ' : ' + r.error).join('\n'), 'error');
+      toast(ok + ' ' + doneMsg + ', ' + failed.length + ' failed:\n'
+        + failed.map((r) => '• ' + label(r.name) + ': ' + r.error).join('\n'), 'error');
     } else {
-      toast(ok + ' dossier(s) ' + doneMsg + '.');
+      toast(count(ok, 'folder') + ' ' + doneMsg + '.');
     }
     return results.filter((r) => !r.error).map((r) => r.name);
   } catch (e) {
-    toast('Erreur : ' + e.message, 'error');
+    toast('Error: ' + e.message, 'error');
     return [];
   } finally {
     state.busy = false;
@@ -118,7 +123,7 @@ async function startScan() {
   try {
     applyStatus(await postJSON('/api/scan', {}));
   } catch (e) {
-    toast('Erreur : ' + e.message, 'error');
+    toast('Error: ' + e.message, 'error');
   }
   poll();
 }
@@ -152,15 +157,15 @@ function applyStatus(st) {
 function renderScanStatus() {
   const { running, done, total, error } = state.scan;
   $('scanBtn').disabled = running;
-  $('scanBtn').textContent = running ? 'Scan… ' + (total ? done + '/' + total : '') : '⟳ Scanner';
+  $('scanBtn').textContent = running ? 'Scanning… ' + (total ? done + '/' + total : '') : '⟳ Scan';
   $('scanProgress').hidden = !running;
   $('scanProgressBar').style.width = (total ? (100 * done) / total : 0) + '%';
 
   const info = $('scanInfo');
   info.classList.toggle('error', !!error);
-  if (error) info.textContent = 'Dernier scan en échec : ' + error;
-  else if (running) info.textContent = 'Calcul des tailles… ' + done + '/' + total;
-  else if (state.data) info.textContent = 'Scanné le ' + formatDate(state.data.scanned_at);
+  if (error) info.textContent = 'Last scan failed: ' + error;
+  else if (running) info.textContent = 'Computing sizes… ' + done + '/' + total;
+  else if (state.data) info.textContent = 'Scanned ' + formatDate(state.data.scanned_at);
   else info.textContent = '';
 }
 
@@ -170,7 +175,7 @@ async function loadTrash() {
   } catch (e) {
     state.trash = null;
     if (state.view === 'trash') {
-      $('content').innerHTML = '<div class="error-box">Erreur : ' + esc(e.message) + '</div>';
+      $('content').innerHTML = '<div class="error-box">Error: ' + esc(e.message) + '</div>';
     }
     return;
   }
@@ -181,7 +186,7 @@ async function loadTrash() {
 }
 
 async function trashFolders(names) {
-  const done = await runBatch('/api/delete', { names }, 'mis à la corbeille');
+  const done = await runBatch('/api/delete', { names }, 'moved to trash');
   done.forEach((n) => state.selected.delete(n));
   poll(); // the server drops trashed folders from its report, no rescan needed
   loadTrash();
@@ -193,13 +198,13 @@ function trashLabel(id) {
 }
 
 async function restoreTrash(ids) {
-  await runBatch('/api/trash/restore', { ids }, 'restauré(s)', trashLabel);
+  await runBatch('/api/trash/restore', { ids }, 'restored', trashLabel);
   poll(); // the server rescans to get the usage and size of restored folders
   loadTrash();
 }
 
 async function purgeTrash(ids) {
-  await runBatch('/api/trash/purge', { ids }, 'supprimé(s) définitivement', trashLabel);
+  await runBatch('/api/trash/purge', { ids }, 'permanently deleted', trashLabel);
   loadTrash();
 }
 
@@ -214,7 +219,7 @@ function showView(view) {
   if (folders) {
     render();
   } else {
-    $('content').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement…</div>';
+    $('content').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     loadTrash();
   }
 }
@@ -226,8 +231,8 @@ function render() {
   if (!d) {
     $('statsBar').hidden = $('controlsBar').hidden = $('bulkBar').hidden = true;
     $('content').innerHTML = state.scan.error && !state.scan.running
-      ? '<div class="error-box">Erreur : ' + esc(state.scan.error) + '</div>'
-      : '<div class="loading"><div class="spinner"></div>Scan en cours…</div>';
+      ? '<div class="error-box">Error: ' + esc(state.scan.error) + '</div>'
+      : '<div class="loading"><div class="spinner"></div>Scanning…</div>';
     return;
   }
 
@@ -236,7 +241,7 @@ function render() {
   $('controlsBar').hidden = false;
   const approx = state.scan.running ? '≈ ' : '';
   $('statTotal').textContent = d.folders.length;
-  $('statTotalSize').textContent = approx + formatBytes(d.total_size) + ' au total';
+  $('statTotalSize').textContent = approx + formatBytes(d.total_size) + ' total';
   $('statUsed').textContent = d.used_count;
   $('statOrphan').textContent = d.orphan_count;
   $('statOrphanSize').textContent = approx + formatBytes(d.orphan_size);
@@ -253,7 +258,7 @@ function sortHeader(key, label) {
 function renderTable() {
   const folders = visibleFolders();
   if (folders.length === 0) {
-    $('content').innerHTML = '<div class="empty-state">Aucun dossier trouvé avec ces filtres.</div>';
+    $('content').innerHTML = '<div class="empty-state">No folders match these filters.</div>';
     return;
   }
 
@@ -263,13 +268,13 @@ function renderTable() {
       ? '<input type="checkbox" data-select="' + name + '"' + (state.selected.has(f.name) ? ' checked' : '') + '>'
       : '';
     const status = f.orphan
-      ? '<span class="status-badge orphan">● Orphelin</span>'
-      : '<span class="status-badge linked">● Utilisé</span>';
+      ? '<span class="status-badge orphan">● Orphan</span>'
+      : '<span class="status-badge linked">● In use</span>';
     const containers = f.orphan
       ? '<span class="muted">—</span>'
       : f.containers.map((c) => '<span class="container-tag">' + esc(c) + '</span>').join('');
     const action = f.orphan
-      ? '<button class="btn btn-danger btn-sm" data-delete="' + name + '">Corbeille</button>'
+      ? '<button class="btn btn-danger btn-sm" data-delete="' + name + '">Trash</button>'
       : '';
 
     return '<tr class="' + (f.orphan ? 'orphan' : '') + '">'
@@ -283,8 +288,8 @@ function renderTable() {
   });
 
   $('content').innerHTML = '<div class="table-wrap"><table><thead><tr>'
-    + '<th class="select-col"><input type="checkbox" id="selectAll" title="Sélectionner les orphelins affichés"></th>'
-    + sortHeader('name', 'Dossier') + sortHeader('size', 'Taille') + sortHeader('status', 'Statut')
+    + '<th class="select-col"><input type="checkbox" id="selectAll" title="Select the orphans shown"></th>'
+    + sortHeader('name', 'Folder') + sortHeader('size', 'Size') + sortHeader('status', 'Status')
     + '<th>Containers</th><th></th>'
     + '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
 
@@ -294,7 +299,7 @@ function renderTable() {
 function sizeCell(f) {
   if (!f.size_pending) return '<span class="folder-size">' + formatBytes(f.size) + '</span>';
   const text = f.size ? formatBytes(f.size) : '…';
-  return '<span class="folder-size pending" title="Calcul en cours">' + text + '</span>';
+  return '<span class="folder-size pending" title="Computing…">' + text + '</span>';
 }
 
 function syncSelectAll(folders = visibleFolders()) {
@@ -310,14 +315,14 @@ function syncSelectAll(folders = visibleFolders()) {
 function renderBulkBar() {
   const n = state.selected.size;
   $('bulkBar').hidden = n === 0 || state.view !== 'folders';
-  $('bulkCount').textContent = n + ' sélectionné(s)';
+  $('bulkCount').textContent = n + ' selected';
 }
 
 function retentionText() {
   const days = state.trash ? state.trash.retention_days : 0;
   return days > 0
-    ? 'Supprimés définitivement après ' + days + ' jour(s).'
-    : 'Conservés jusqu\'à ce que la corbeille soit vidée.';
+    ? 'Permanently deleted after ' + count(days, 'day') + '.'
+    : 'Kept until the trash is emptied.';
 }
 
 function confirmTrash(names) {
@@ -326,13 +331,13 @@ function confirmTrash(names) {
     .filter((f) => names.includes(f.name))
     .reduce((sum, f) => sum + f.size, 0);
   const list = names.map((n) => '<code>' + esc(n) + '</code>').join(', ');
-  const what = names.length === 1 ? list : '<strong>' + names.length + ' dossiers</strong>';
+  const what = names.length === 1 ? list : '<strong>' + names.length + ' folders</strong>';
   openModal({
-    title: 'Mettre à la corbeille',
-    html: '<p>Déplacer ' + what + ' (' + formatBytes(size) + ') dans la corbeille ?</p>'
+    title: 'Move to trash',
+    html: '<p>Move ' + what + ' (' + formatBytes(size) + ') to the trash?</p>'
       + (names.length > 1 ? '<p>' + list + '</p>' : '')
-      + '<p>Vous pourrez les restaurer depuis la corbeille. ' + retentionText() + '</p>',
-    confirmLabel: 'Mettre à la corbeille',
+      + '<p>You can restore them from the trash. ' + retentionText() + '</p>',
+    confirmLabel: 'Move to trash',
     onConfirm: () => trashFolders(names),
   });
 }
@@ -343,12 +348,12 @@ function renderTrash() {
   const { items } = state.trash;
   const total = items.reduce((sum, i) => sum + i.size, 0);
   $('trashInfo').textContent = items.length
-    ? items.length + ' dossier(s), ' + formatBytes(total) + '. ' + retentionText()
+    ? count(items.length, 'folder') + ', ' + formatBytes(total) + '. ' + retentionText()
     : retentionText();
   $('emptyTrashBtn').disabled = items.length === 0;
 
   if (items.length === 0) {
-    $('content').innerHTML = '<div class="empty-state">La corbeille est vide.</div>';
+    $('content').innerHTML = '<div class="empty-state">The trash is empty.</div>';
     return;
   }
 
@@ -359,14 +364,14 @@ function renderTrash() {
       + '<td><span class="folder-size">' + formatDate(i.deleted_at) + '</span></td>'
       + '<td><span class="folder-size">' + formatBytes(i.size) + '</span></td>'
       + '<td><div class="row-actions">'
-      + '<button class="btn btn-ghost btn-sm" data-restore="' + id + '">Restaurer</button>'
-      + '<button class="btn btn-danger btn-sm" data-purge="' + id + '">Supprimer</button>'
+      + '<button class="btn btn-ghost btn-sm" data-restore="' + id + '">Restore</button>'
+      + '<button class="btn btn-danger btn-sm" data-purge="' + id + '">Delete</button>'
       + '</div></td>'
       + '</tr>';
   });
 
   $('content').innerHTML = '<div class="table-wrap"><table><thead><tr>'
-    + '<th>Dossier</th><th>Supprimé le</th><th>Taille</th><th></th>'
+    + '<th>Folder</th><th>Deleted</th><th>Size</th><th></th>'
     + '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
 }
 
@@ -376,12 +381,12 @@ function confirmPurge(ids) {
   const size = items.reduce((sum, i) => sum + i.size, 0);
   const what = items.length === 1
     ? '<code>' + esc(items[0].name) + '</code>'
-    : '<strong>' + items.length + ' dossiers</strong>';
+    : '<strong>' + items.length + ' folders</strong>';
   openModal({
-    title: 'Suppression définitive',
-    html: '<p>Supprimer définitivement ' + what + ' (' + formatBytes(size) + ') ?</p>'
-      + '<p>Cette action est irréversible.</p>',
-    confirmLabel: 'Supprimer définitivement',
+    title: 'Delete permanently',
+    html: '<p>Permanently delete ' + what + ' (' + formatBytes(size) + ')?</p>'
+      + '<p>This cannot be undone.</p>',
+    confirmLabel: 'Delete permanently',
     onConfirm: () => purgeTrash(ids),
   });
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,53 +16,53 @@
     <span class="path-badge" id="pathBadge">-</span>
   </div>
   <div class="header-right">
-    <button class="btn btn-ghost" id="trashBtn">🗑 Corbeille <span class="count-badge" id="trashCount" hidden></span></button>
-    <button class="btn btn-primary" id="scanBtn">⟳ Scanner</button>
-    <button class="btn btn-ghost" id="logoutBtn" hidden>Déconnexion</button>
+    <button class="btn btn-ghost" id="trashBtn">🗑 Trash <span class="count-badge" id="trashCount" hidden></span></button>
+    <button class="btn btn-primary" id="scanBtn">⟳ Scan</button>
+    <button class="btn btn-ghost" id="logoutBtn" hidden>Log out</button>
   </div>
 </header>
 <div id="scanProgress" class="scan-progress" hidden><div id="scanProgressBar"></div></div>
 
 <section id="statsBar" class="stats-bar" hidden>
   <div class="stat-card">
-    <div class="stat-label">Total dossiers</div>
+    <div class="stat-label">Folders</div>
     <div class="stat-value blue" id="statTotal">-</div>
     <div class="stat-sub" id="statTotalSize"></div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Utilisés</div>
+    <div class="stat-label">In use</div>
     <div class="stat-value green" id="statUsed">-</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Orphelins</div>
+    <div class="stat-label">Orphans</div>
     <div class="stat-value red" id="statOrphan">-</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Espace orphelins</div>
+    <div class="stat-label">Orphan space</div>
     <div class="stat-value orange" id="statOrphanSize">-</div>
   </div>
 </section>
 
 <nav id="controlsBar" class="controls" hidden>
-  <button class="filter-btn active" data-filter="all">Tous</button>
-  <button class="filter-btn" data-filter="orphan">Orphelins</button>
-  <button class="filter-btn" data-filter="linked">Utilisés</button>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="orphan">Orphans</button>
+  <button class="filter-btn" data-filter="linked">In use</button>
   <span class="scan-info" id="scanInfo"></span>
   <div class="search-box">
-    <input type="search" placeholder="Rechercher un dossier ou un container…" id="searchInput">
+    <input type="search" placeholder="Search folders or containers…" id="searchInput">
   </div>
 </nav>
 
 <div id="bulkBar" class="bulk-bar" hidden>
   <span id="bulkCount"></span>
-  <button class="btn btn-danger" id="bulkDeleteBtn">Mettre à la corbeille</button>
-  <button class="btn btn-ghost push-right" id="clearSelectionBtn">Tout désélectionner</button>
+  <button class="btn btn-danger" id="bulkDeleteBtn">Move to trash</button>
+  <button class="btn btn-ghost push-right" id="clearSelectionBtn">Clear selection</button>
 </div>
 
 <div id="trashBar" class="controls" hidden>
-  <button class="btn btn-ghost" id="backBtn">← Dossiers</button>
+  <button class="btn btn-ghost" id="backBtn">← Folders</button>
   <span class="trash-info" id="trashInfo"></span>
-  <button class="btn btn-danger push-right" id="emptyTrashBtn">Vider la corbeille</button>
+  <button class="btn btn-danger push-right" id="emptyTrashBtn">Empty trash</button>
 </div>
 
 <main id="content"></main>
@@ -74,7 +74,7 @@
     <h3 id="modalTitle"></h3>
     <div id="modalBody" class="modal-body"></div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="modalCancel">Annuler</button>
+      <button class="btn btn-ghost" id="modalCancel">Cancel</button>
       <button class="btn btn-danger" id="modalConfirm"></button>
     </div>
   </div>
