@@ -24,14 +24,6 @@ const (
 	lockout     = time.Minute
 )
 
-// publicPaths are reachable without a session.
-var publicPaths = map[string]bool{
-	"/login.html": true,
-	"/login.js":   true,
-	"/style.css":  true,
-	"/api/login":  true,
-}
-
 type Auth struct {
 	user, pass [32]byte // SHA-256 digests, compared in constant time
 	ttl        time.Duration
@@ -57,19 +49,17 @@ func New(user, password string, ttl time.Duration) *Auth {
 	}
 }
 
-// Middleware rejects requests without a valid session: API calls get a 401,
-// pages are redirected to the login form.
+// Middleware answers 401 to API calls without a valid session, except login.
+// The UI files hold no data and are served to everyone: the app shows its login
+// form when the API answers 401.
 func (a *Auth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if publicPaths[r.URL.Path] || a.validSession(r) {
-			next.ServeHTTP(w, r)
-			return
-		}
-		if strings.HasPrefix(r.URL.Path, "/api/") {
+		protected := strings.HasPrefix(r.URL.Path, "/api/") && r.URL.Path != "/api/login"
+		if protected && !a.validSession(r) {
 			writeError(w, http.StatusUnauthorized, "authentication required")
 			return
 		}
-		http.Redirect(w, r, "/login.html", http.StatusSeeOther)
+		next.ServeHTTP(w, r)
 	})
 }
 

@@ -41,11 +41,12 @@ func TestUnauthenticated(t *testing.T) {
 	if rec := get(h, "/api/scan"); rec.Code != http.StatusUnauthorized {
 		t.Errorf("API without session: got %d, want 401", rec.Code)
 	}
-	if rec := get(h, "/"); rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/login.html" {
-		t.Errorf("page without session: got %d to %q, want redirect to /login.html", rec.Code, rec.Header().Get("Location"))
+	if rec := get(h, "/api/session"); rec.Code != http.StatusUnauthorized {
+		t.Errorf("session without login: got %d, want 401", rec.Code)
 	}
-	if rec := get(h, "/login.html"); rec.Code != http.StatusOK {
-		t.Errorf("login page: got %d, want 200", rec.Code)
+	// The UI itself is public; it shows its login form on 401.
+	if rec := get(h, "/"); rec.Code != http.StatusOK {
+		t.Errorf("UI without session: got %d, want 200", rec.Code)
 	}
 }
 

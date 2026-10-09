@@ -1,4 +1,7 @@
-// Package web embeds the static files of the UI.
+// Package web embeds the built UI (a Svelte app, see package.json).
+//
+// Run `npm ci && npm run build` in this directory before `go build`; without it
+// the binary still builds (dist/.gitkeep keeps the embed valid) but serves no UI.
 package web
 
 import (
@@ -6,11 +9,11 @@ import (
 	"io/fs"
 )
 
-//go:embed static
+//go:embed all:dist
 var files embed.FS
 
-// Static is the UI file tree, rooted at static/.
-var Static = mustSub(files, "static")
+// Static is the built UI file tree, rooted at dist/.
+var Static = mustSub(files, "dist")
 
 func mustSub(fsys fs.FS, dir string) fs.FS {
 	sub, err := fs.Sub(fsys, dir)

@@ -1,7 +1,10 @@
 .git
+.github
 .zed
 *.exe
 appdata-suppressor
 Dockerfile
 compose.yaml
 README.md
+web/node_modules
+web/dist
