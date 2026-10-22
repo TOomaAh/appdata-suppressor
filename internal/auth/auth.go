@@ -54,7 +54,7 @@ func New(user, password string, ttl time.Duration) *Auth {
 // form when the API answers 401.
 func (a *Auth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		protected := strings.HasPrefix(r.URL.Path, "/api/") && r.URL.Path != "/api/login"
+		protected := strings.HasPrefix(r.URL.Path, "/api/") && r.URL.Path != "/api/login" && r.URL.Path != "/api/health"
 		if protected && !a.validSession(r) {
 			writeError(w, http.StatusUnauthorized, "authentication required")
 			return
