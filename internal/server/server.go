@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 
 	"appdata-suppressor/internal/auth"
@@ -51,6 +52,18 @@ func New(o Options) http.Handler {
 		job.Forget(succeeded(results))
 		return results
 	}))
+
+	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
+		ip := r.RemoteAddr
+		ipParsed := net.ParseIP(ip)
+
+		if ipParsed == nil || !ipParsed.IsLoopback() {
+			writeError(w, http.StatusForbidden, "health check is only allowed from localhost")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string]string{"status": "healthy"})
+	})
 
 	mux.HandleFunc("GET /api/trash", func(w http.ResponseWriter, r *http.Request) {
 		items, err := sc.Trash(r.Context())
